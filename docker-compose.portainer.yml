@@ -95,24 +95,11 @@ services:
     volumes:
       - prometheus_data:/prometheus
     command:
-      - /bin/sh
-      - -c
-      - |
-        mkdir -p /etc/prometheus
-        echo "global:
-          scrape_interval: 15s
-          evaluation_interval: 15s
-        scrape_configs:
-          - job_name: 'prometheus'
-            scrape_interval: 15s
-            static_configs:
-              - targets: ['localhost:9090']
-          - job_name: 'marsbridge-server'
-            scrape_interval: 15s
-            static_configs:
-              - targets: ['marsbridge-server:8080']
-            metrics_path: '/metrics'" > /etc/prometheus/prometheus.yml
-        /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.enable-lifecycle
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    environment:
+      - PROMETHEUS_OPTS="--log.level=info"
 
   grafana:
     image: grafana/grafana:latest
