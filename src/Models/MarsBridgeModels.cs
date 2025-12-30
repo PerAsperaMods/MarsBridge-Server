@@ -16,13 +16,55 @@ public class PlayerInfo
     public DateTime ConnectedAt { get; set; }
 }
 
+public class ChemicalElement
+{
+    public string Symbol { get; set; } = string.Empty; // "CO2", "H2O", "N2", "O2", etc.
+    public string State { get; set; } = "gas"; // "gas", "liquid", "solid", "plasma"
+    public float Percentage { get; set; } // 0-100
+    public float PartialPressure { get; set; } // atm
+    
+    // Clé unique pour identifier l'élément dans les collections
+    public string UniqueKey => $"{Symbol}_{State}";
+    
+    // Constructeur pratique
+    public ChemicalElement(string symbol, string state, float percentage, float partialPressure = 0)
+    {
+        Symbol = symbol;
+        State = state;
+        Percentage = percentage;
+        PartialPressure = partialPressure;
+    }
+}
+
 public class ClimateData
 {
     public float Temperature { get; set; }
     public float Pressure { get; set; }
-    public Dictionary<string, float> AtmosphericComposition { get; set; } = new();
+    // Remplacement du Dictionary<string, float> par une liste d'éléments chimiques
+    public List<ChemicalElement> AtmosphericComposition { get; set; } = new();
     public float TerraformingProgress { get; set; }
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    
+    // Méthode helper pour obtenir un élément par symbole et état
+    public ChemicalElement? GetElement(string symbol, string state = "gas")
+    {
+        return AtmosphericComposition.FirstOrDefault(e => e.Symbol == symbol && e.State == state);
+    }
+    
+    // Méthode helper pour ajouter/modifier un élément
+    public void SetElement(string symbol, string state, float percentage, float partialPressure = 0)
+    {
+        var existing = GetElement(symbol, state);
+        if (existing != null)
+        {
+            existing.Percentage = percentage;
+            existing.PartialPressure = partialPressure;
+        }
+        else
+        {
+            AtmosphericComposition.Add(new ChemicalElement(symbol, state, percentage, partialPressure));
+        }
+    }
 }
 
 public class ResourceData

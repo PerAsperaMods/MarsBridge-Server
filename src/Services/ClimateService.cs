@@ -9,13 +9,15 @@ public class ClimateService
     {
         Temperature = -60f,  // Mars baseline
         Pressure = 0.006f,   // Mars baseline
-        AtmosphericComposition = new Dictionary<string, float>
+        AtmosphericComposition = new List<ChemicalElement>
         {
-            ["CO2"] = 95.0f,
-            ["N2"] = 2.7f,
-            ["Ar"] = 1.6f,
-            ["O2"] = 0.13f,
-            ["Other"] = 0.57f
+            new("CO2", "gas", 95.0f, 0.0057f),
+            new("N2", "gas", 2.7f, 0.000162f),
+            new("Ar", "gas", 1.6f, 0.000096f),
+            new("O2", "gas", 0.13f, 0.0000078f),
+            new("CO", "gas", 0.08f, 0.0000048f),
+            new("H2O", "gas", 0.03f, 0.0000018f),
+            new("He", "gas", 0.01f, 0.0000006f)
         },
         TerraformingProgress = 0f
     };
@@ -47,12 +49,12 @@ public class ClimateService
             Gases = new Dictionary<string, GasInfo>()
         };
 
-        foreach (var gas in _currentClimate.AtmosphericComposition)
+        foreach (var element in _currentClimate.AtmosphericComposition.Where(e => e.State == "gas"))
         {
-            atmosphere.Gases[gas.Key] = new GasInfo
+            atmosphere.Gases[element.Symbol] = new GasInfo
             {
-                Percentage = gas.Value,
-                PartialPressure = _currentClimate.Pressure * (gas.Value / 100f)
+                Percentage = element.Percentage,
+                PartialPressure = element.PartialPressure
             };
         }
 
@@ -145,11 +147,16 @@ public class ClimateService
                 
             case "CONVERT_CO2":
                 // Simulate CO2 conversion to O2
-                if (_currentClimate.AtmosphericComposition.ContainsKey("CO2") && _currentClimate.AtmosphericComposition.ContainsKey("O2"))
+                var co2Element = _currentClimate.GetElement("CO2", "gas");
+                var o2Element = _currentClimate.GetElement("O2", "gas");
+                if (co2Element != null && o2Element != null)
                 {
                     var co2Reduction = command.TargetValue * 0.01f;
-                    _currentClimate.AtmosphericComposition["CO2"] = Math.Max(_currentClimate.AtmosphericComposition["CO2"] - co2Reduction, 10f);
-                    _currentClimate.AtmosphericComposition["O2"] = Math.Min(_currentClimate.AtmosphericComposition["O2"] + (co2Reduction * 0.5f), 25f);
+                    var newCo2Percentage = Math.Max(co2Element.Percentage - co2Reduction, 10f);
+                    var newO2Percentage = Math.Min(o2Element.Percentage + (co2Reduction * 0.5f), 25f);
+                    
+                    _currentClimate.SetElement("CO2", "gas", newCo2Percentage);
+                    _currentClimate.SetElement("O2", "gas", newO2Percentage);
                 }
                 break;
                 
@@ -203,7 +210,7 @@ public class ClimateService
         // Simple terraforming calculation based on temperature, pressure, and O2
         float tempProgress = Math.Max(0, (_currentClimate.Temperature + 60) / 80f); // -60°C to +20°C
         float pressureProgress = Math.Min(1, _currentClimate.Pressure / 0.2f); // 0 to 0.2 atm
-        float oxygenProgress = _currentClimate.AtmosphericComposition.GetValueOrDefault("O2", 0) / 20f; // 0% to 20%
+        float oxygenProgress = _currentClimate.GetElement("O2", "gas")?.Percentage ?? 0 / 20f; // 0% to 20%
 
         return Math.Min(100f, (tempProgress + pressureProgress + oxygenProgress) / 3f * 100f);
     }
