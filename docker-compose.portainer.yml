@@ -1,0 +1,162 @@
+# MarsBridge Server - Portainer Deployment
+# Deploy via: Portainer > Stacks > Add stack > Repository
+version: '3.8'
+
+services:
+  # MarsBridge Core Server
+  marsbridge-server:
+    build: 
+      context: ./src
+      dockerfile: Dockerfile
+    image: marsbridge/server:latest
+    container_name: marsbridge-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"  # REST API
+      - "8081:8081"  # WebSocket Hub
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080;http://+:8081
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=marsbridge;Username=marsbridge;Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__Redis=redis:6379
+      - RabbitMQ__ConnectionString=amqp://marsbridge:${RABBITMQ_PASSWORD}@rabbitmq:5672/
+      - JWT__SecretKey=${JWT_SECRET}
+      - JWT__Issuer=MarsBridge
+      - JWT__Audience=MarsBridgeClients
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    volumes:
+      - marsbridge_logs:/app/logs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.marsbridge.rule=Host(`marsbridge.yourdomain.com`)"
+      - "traefik.http.services.marsbridge.loadbalancer.server.port=8080"
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: marsbridge-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=marsbridge
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+      - RABBITMQ_DEFAULT_VHOST=marsbridge
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./config/rabbitmq:/etc/rabbitmq
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rabbitmq.rule=Host(`rabbitmq.yourdomain.com`)"
+      - "traefik.http.services.rabbitmq.loadbalancer.server.port=15672"
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: marsbridge-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=marsbridge
+      - POSTGRES_USER=marsbridge
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./config/postgres:/docker-entrypoint-initdb.d
+    labels:
+      - "backup.enable=true"
+      - "backup.schedule=0 2 * * *"
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: marsbridge-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+      - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: marsbridge-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: marsbridge-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_DATABASE_TYPE=postgres
+      - GF_DATABASE_HOST=postgres:5432
+      - GF_DATABASE_NAME=grafana
+      - GF_DATABASE_USER=grafana
+      - GF_DATABASE_PASSWORD=${GRAFANA_DB_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana:/etc/grafana/provisioning
+    depends_on:
+      - postgres
+      - prometheus
+
+  # Nginx Load Balancer (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: marsbridge-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx:/etc/nginx/conf.d
+      - ./ssl:/etc/nginx/ssl
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - marsbridge-server
+
+# Persistent Volumes
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  marsbridge_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+
+# Networks
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
