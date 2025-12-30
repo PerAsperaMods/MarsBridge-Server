@@ -66,7 +66,6 @@ public class ClimateController : ControllerBase
             <div class='endpoint'><strong>Health Check:</strong> <a href='/health'>/health</a></div>
             <div class='endpoint'><strong>Climate Status:</strong> <a href='/api/climate/status'>/api/climate/status</a></div>
             <div class='endpoint'><strong>Atmosphere Data:</strong> <a href='/api/climate/atmosphere'>/api/climate/atmosphere</a></div>
-            <div class='endpoint'><strong>Connected Players:</strong> <a href='/api/climate/players'>/api/climate/players</a></div>
             <div class='endpoint'><strong>SignalR Hub:</strong> /climatehub (WebSocket)</div>
             <div class='endpoint'><strong>Prometheus Metrics:</strong> <a href='/metrics'>/metrics</a></div>
         </div>
