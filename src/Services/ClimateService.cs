@@ -1,4 +1,6 @@
 using MarsBridge.Server.Models;
+using MarsBridge.Server.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using Serilog;
 
 namespace MarsBridge.Server.Services;
@@ -23,6 +25,12 @@ public class ClimateService
     };
 
     private readonly List<ClimateHistoryEntry> _history = new();
+    private readonly IHubContext<ClimateHub> _climateHub;
+
+    public ClimateService(IHubContext<ClimateHub> climateHub)
+    {
+        _climateHub = climateHub;
+    }
 
     public async Task<ClimateStatus> GetCurrentStatusAsync()
     {
@@ -227,10 +235,18 @@ public class ClimateService
             return false;
         }
         
-        // Note: This would need to be implemented to send command to game client via SignalR
-        // For now, just log the command
-        Log.Information("🎮 TickTime multiplier set to: {Multiplier}x", multiplier);
-        return true;
+        // Send command to Per Aspera clients via SignalR
+        try
+        {
+            await _climateHub.Clients.Group("PerAspera").SendAsync("TickTimeCommandReceived", multiplier);
+            Log.Information("🎮 TickTime command sent to Per Aspera clients: {Multiplier}x", multiplier);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "❌ Failed to send tickTime command to clients");
+            return false;
+        }
     }
 
     private float CalculateTerraformingProgress()
