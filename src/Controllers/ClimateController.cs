@@ -16,7 +16,68 @@ public class ClimateController : ControllerBase
         _climateService = climateService;
     }
 
-    [HttpGet("status")]
+    [HttpGet]
+    [Route("/")]
+    public IActionResult Index()
+    {
+        var html = @"
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>🌍 MarsBridge Server</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; }
+        .status { background: #27ae60; color: white; padding: 10px; border-radius: 5px; text-align: center; margin: 20px 0; }
+        .endpoints { background: #ecf0f1; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        .endpoint { margin: 10px 0; }
+        .endpoint a { color: #3498db; text-decoration: none; }
+        .endpoint a:hover { text-decoration: underline; }
+        .games { display: flex; justify-content: space-around; margin: 20px 0; }
+        .game { background: #3498db; color: white; padding: 15px; border-radius: 5px; text-align: center; flex: 1; margin: 0 10px; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h1>🌍 MarsBridge Server</h1>
+        <p><strong>Cross-Game Climate Communication System</strong></p>
+        
+        <div class='status'>
+            ✅ Server Status: RUNNING<br>
+            📅 Last Update: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + @" UTC
+        </div>
+        
+        <div class='games'>
+            <div class='game'>
+                <h3>🚀 Per Aspera</h3>
+                <p>Mars Terraforming</p>
+            </div>
+            <div class='game'>
+                <h3>🏭 Satisfactory</h3>
+                <p>Factory Automation</p>
+            </div>
+        </div>
+        
+        <h2>📡 Available Endpoints</h2>
+        <div class='endpoints'>
+            <div class='endpoint'><strong>Health Check:</strong> <a href='/health'>/health</a></div>
+            <div class='endpoint'><strong>Climate Status:</strong> <a href='/api/climate/status'>/api/climate/status</a></div>
+            <div class='endpoint'><strong>Atmosphere Data:</strong> <a href='/api/climate/atmosphere'>/api/climate/atmosphere</a></div>
+            <div class='endpoint'><strong>Connected Players:</strong> <a href='/api/climate/players'>/api/climate/players</a></div>
+            <div class='endpoint'><strong>SignalR Hub:</strong> /climatehub (WebSocket)</div>
+            <div class='endpoint'><strong>Prometheus Metrics:</strong> <a href='/metrics'>/metrics</a></div>
+        </div>
+        
+        <p><em>Real-time climate data exchange between Per Aspera and Satisfactory games.</em></p>
+    </div>
+</body>
+</html>";
+        
+        return Content(html, "text/html");
+    }
     public async Task<ActionResult<ApiResponse<ClimateStatus>>> GetClimateStatus()
     {
         try
