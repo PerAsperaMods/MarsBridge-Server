@@ -95,6 +95,7 @@ services:
     volumes:
       - prometheus_data:/prometheus
     command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
       - '--web.enable-admin-api'
