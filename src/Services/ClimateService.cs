@@ -201,8 +201,36 @@ public class ClimateService
     public void UpdateClimateFromGame(ClimateData climateData)
     {
         _currentClimate = climateData;
-        Log.Information("🎮 Climate data updated from game: Temp={Temperature}°C, Pressure={Pressure}atm",
-            climateData.Temperature, climateData.Pressure);
+        Log.Information("🎮 Climate data updated from game: Temp={Temperature}°C, Pressure={Pressure}atm, TickTime={TickTimeMultiplier}x",
+            climateData.Temperature, climateData.Pressure, climateData.TickTimeMultiplier);
+    }
+
+    public void UpdateTickTimeFromGame(float multiplier)
+    {
+        _currentClimate.TickTimeMultiplier = multiplier;
+        Log.Information("⏰ TickTime multiplier updated from game: {Multiplier}x", multiplier);
+    }
+
+    public async Task<float> GetTickTimeMultiplierAsync()
+    {
+        await Task.Delay(1); // Simulate async operation
+        return _currentClimate.TickTimeMultiplier;
+    }
+
+    public async Task<bool> SetTickTimeMultiplierAsync(float multiplier)
+    {
+        await Task.Delay(1); // Simulate async operation
+        
+        if (multiplier < 0.1f || multiplier > 10.0f)
+        {
+            Log.Warning("❌ Invalid tickTime multiplier: {Multiplier}. Must be between 0.1 and 10.0", multiplier);
+            return false;
+        }
+        
+        // Note: This would need to be implemented to send command to game client via SignalR
+        // For now, just log the command
+        Log.Information("🎮 TickTime multiplier set to: {Multiplier}x", multiplier);
+        return true;
     }
 
     private float CalculateTerraformingProgress()

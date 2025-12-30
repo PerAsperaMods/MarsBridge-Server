@@ -211,4 +211,72 @@ public class ClimateController : ControllerBase
             });
         }
     }
+
+    [HttpGet("ticktime")]
+    public async Task<ActionResult<ApiResponse<float>>> GetTickTime()
+    {
+        try
+        {
+            var multiplier = await _climateService.GetTickTimeMultiplierAsync();
+            return Ok(new ApiResponse<float>
+            {
+                Success = true,
+                Message = "TickTime multiplier retrieved successfully",
+                Data = multiplier
+            });
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "❌ Error getting tickTime multiplier");
+            return StatusCode(500, new ApiResponse<float>
+            {
+                Success = false,
+                Message = $"Error getting tickTime multiplier: {ex.Message}"
+            });
+        }
+    }
+
+    [HttpPost("ticktime")]
+    public async Task<ActionResult<ApiResponse<bool>>> SetTickTime([FromBody] TickTimeRequest request)
+    {
+        try
+        {
+            if (!request.IsValid)
+            {
+                return BadRequest(new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = "Invalid tickTime multiplier. Must be between 0.1 and 10.0"
+                });
+            }
+
+            var success = await _climateService.SetTickTimeMultiplierAsync(request.Multiplier);
+            if (success)
+            {
+                return Ok(new ApiResponse<bool>
+                {
+                    Success = true,
+                    Message = $"TickTime multiplier set to {request.Multiplier}x successfully",
+                    Data = true
+                });
+            }
+            else
+            {
+                return StatusCode(500, new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = "Failed to set tickTime multiplier"
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "❌ Error setting tickTime multiplier");
+            return StatusCode(500, new ApiResponse<bool>
+            {
+                Success = false,
+                Message = $"Error setting tickTime multiplier: {ex.Message}"
+            });
+        }
+    }
 }

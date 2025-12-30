@@ -43,6 +43,7 @@ public class ClimateData
     // Remplacement du Dictionary<string, float> par une liste d'éléments chimiques
     public List<ChemicalElement> AtmosphericComposition { get; set; } = new();
     public float TerraformingProgress { get; set; }
+    public float TickTimeMultiplier { get; set; } = 1.0f; // Game speed multiplier
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     
     // Méthode helper pour obtenir un élément par symbole et état
@@ -117,4 +118,12 @@ public class ClimateHistoryEntry
     public string? TriggerEvent { get; set; }
     public string? PlayerId { get; set; }
     public DateTime Timestamp { get; set; }
+}
+
+public class TickTimeRequest
+{
+    public float Multiplier { get; set; }
+    
+    // Validation
+    public bool IsValid => Multiplier >= 0.1f && Multiplier <= 10.0f;
 }

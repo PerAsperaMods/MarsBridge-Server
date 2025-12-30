@@ -74,6 +74,19 @@ public class ClimateHub : Hub
         }
     }
 
+    public async Task SendTickTimeUpdate(float multiplier)
+    {
+        if (ConnectedPlayers.TryGetValue(Context.ConnectionId, out var player))
+        {
+            Log.Information("⏰ TickTime update from {PlayerName}: {Multiplier}x", 
+                player.PlayerName, multiplier);
+
+            // Forward to Satisfactory clients for display
+            await Clients.Group("Satisfactory").SendAsync("PerAsperaTickTimeUpdate", multiplier);
+            TotalMessages++;
+        }
+    }
+
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         if (ConnectedPlayers.TryGetValue(Context.ConnectionId, out var player))
