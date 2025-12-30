@@ -124,6 +124,6 @@ public class TickTimeRequest
 {
     public float Multiplier { get; set; }
     
-    // Validation
-    public bool IsValid => Multiplier >= 0.1f && Multiplier <= 10.0f;
+    // Validation - Allow pause (0.0x) to fast speeds (10.0x)
+    public bool IsValid => Multiplier >= 0.0f && Multiplier <= 10.0f;
 }

@@ -246,7 +246,7 @@ public class ClimateController : ControllerBase
                 return BadRequest(new ApiResponse<bool>
                 {
                     Success = false,
-                    Message = "Invalid tickTime multiplier. Must be between 0.1 and 10.0"
+                    Message = "Invalid tickTime multiplier. Must be between 0.0 and 10.0"
                 });
             }
 

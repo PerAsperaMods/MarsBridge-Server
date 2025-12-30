@@ -229,9 +229,9 @@ public class ClimateService
     {
         await Task.Delay(1); // Simulate async operation
         
-        if (multiplier < 0.1f || multiplier > 10.0f)
+        if (multiplier < 0.0f || multiplier > 10.0f)
         {
-            Log.Warning("❌ Invalid tickTime multiplier: {Multiplier}. Must be between 0.1 and 10.0", multiplier);
+            Log.Warning("❌ Invalid tickTime multiplier: {Multiplier}. Must be between 0.0 and 10.0", multiplier);
             return false;
         }
         
