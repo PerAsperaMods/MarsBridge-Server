@@ -7,6 +7,10 @@ namespace MarsBridge.Server.Hubs;
 public class ClimateHub : Hub
 {
     private static readonly Dictionary<string, PlayerInfo> ConnectedPlayers = new();
+    
+    // Propriétés statiques pour le monitoring
+    public static int ActiveConnections => ConnectedPlayers.Count;
+    public static long TotalMessages { get; private set; } = 0;
 
     public async Task RegisterPlayer(string playerId, string playerName, string gameType)
     {
@@ -28,6 +32,7 @@ public class ClimateHub : Hub
 
         // Notify all clients about new player
         await Clients.All.SendAsync("PlayerConnected", playerInfo);
+        TotalMessages++;
     }
 
     public async Task SendClimateData(ClimateData data)
@@ -39,6 +44,7 @@ public class ClimateHub : Hub
 
             // Forward to all Satisfactory clients
             await Clients.Group("Satisfactory").SendAsync("MarsClimateUpdate", data);
+            TotalMessages++;
         }
     }
 
@@ -51,6 +57,7 @@ public class ClimateHub : Hub
 
             // Forward to Per Aspera clients
             await Clients.Group("PerAspera").SendAsync("FactoryResourceUpdate", data);
+            TotalMessages++;
         }
     }
 
@@ -63,6 +70,7 @@ public class ClimateHub : Hub
 
             // Forward to Per Aspera clients
             await Clients.Group("PerAspera").SendAsync("ClimateCommandReceived", command);
+            TotalMessages++;
         }
     }
 
@@ -76,6 +84,7 @@ public class ClimateHub : Hub
                 player.PlayerName, player.GameType);
 
             await Clients.All.SendAsync("PlayerDisconnected", player);
+            TotalMessages++;
         }
 
         await base.OnDisconnectedAsync(exception);
@@ -85,5 +94,6 @@ public class ClimateHub : Hub
     public async Task GetConnectedPlayers()
     {
         await Clients.Caller.SendAsync("ConnectedPlayersInfo", ConnectedPlayers.Values);
+        TotalMessages++;
     }
 }
