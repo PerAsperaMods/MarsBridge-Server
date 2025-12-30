@@ -93,12 +93,14 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./config/prometheus:/etc/prometheus
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
+    configs:
+      - source: prometheus-config
+        target: /etc/prometheus/prometheus.yml
 
   grafana:
     image: grafana/grafana:latest
@@ -151,6 +153,11 @@ volumes:
     driver: local
   nginx_logs:
     driver: local
+
+# Configuration files
+configs:
+  prometheus-config:
+    file: ./config/prometheus/prometheus.yml
 
 # Networks
 networks:
