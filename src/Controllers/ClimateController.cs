@@ -77,6 +77,7 @@ public class ClimateController : ControllerBase
         
         return Content(html, "text/html");
     }
+    [HttpGet("status")]
     public async Task<ActionResult<ApiResponse<ClimateStatus>>> GetClimateStatus()
     {
         try
