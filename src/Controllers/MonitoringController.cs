@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MarsBridge.Server.Services;
+using MarsBridge.Server.Hubs;
 using System.Diagnostics;
 
 namespace MarsBridge.Server.Controllers;
@@ -62,7 +63,7 @@ public class MonitoringController : ControllerBase
                 temperature = atmosphere.Temperature,
                 pressure = atmosphere.TotalPressure,
                 gasCount = atmosphere.Gases.Count,
-                lastUpdate = atmosphere.Timestamp
+                lastUpdate = DateTime.UtcNow
             },
             connections = new
             {
@@ -76,12 +77,11 @@ public class MonitoringController : ControllerBase
 
     private string GenerateMonitoringPage()
     {
-        return @"
-<!DOCTYPE html>
-<html lang='fr'>
+        return @"<!DOCTYPE html>
+<html lang=""fr"">
 <head>
-    <meta charset='UTF-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
     <title>🪐 MarsBridge Server Monitor</title>
     <style>
         * {
@@ -264,39 +264,39 @@ public class MonitoringController : ControllerBase
     </style>
 </head>
 <body>
-    <div class='container'>
-        <div class='header'>
+    <div class=""container"">
+        <div class=""header"">
             <h1>🪐 MarsBridge Server Monitor</h1>
             <p>Surveillance temps réel du serveur MarsBridge</p>
-            <div class='status-indicator' id='status-indicator'></div>
+            <div class=""status-indicator"" id=""status-indicator""></div>
         </div>
 
-        <div class='metrics-grid'>
-            <div class='metric-card'>
+        <div class=""metrics-grid"">
+            <div class=""metric-card"">
                 <h3>🖥️ Serveur</h3>
-                <div id='server-metrics' class='loading'>Chargement...</div>
+                <div id=""server-metrics"" class=""loading"">Chargement...</div>
             </div>
 
-            <div class='metric-card'>
+            <div class=""metric-card"">
                 <h3>🌡️ Climat</h3>
-                <div id='climate-metrics' class='loading'>Chargement...</div>
+                <div id=""climate-metrics"" class=""loading"">Chargement...</div>
             </div>
 
-            <div class='metric-card'>
+            <div class=""metric-card"">
                 <h3>🔗 Connexions</h3>
-                <div id='connection-metrics' class='loading'>Chargement...</div>
+                <div id=""connection-metrics"" class=""loading"">Chargement...</div>
             </div>
         </div>
 
-        <div class='atmosphere-section'>
+        <div class=""atmosphere-section"">
             <h3>☁️ Composition Atmosphérique</h3>
-            <div id='atmosphere-composition' class='loading'>Chargement...</div>
+            <div id=""atmosphere-composition"" class=""loading"">Chargement...</div>
         </div>
 
-        <div class='footer'>
-            <button class='refresh-btn' onclick='refreshData()'>🔄 Actualiser</button>
-            <p>MarsBridge Server v1.0.0 | <a href='/swagger' style='color: #4ecdc4;'>API Docs</a> | <a href='/metrics' style='color: #4ecdc4;'>Prometheus</a></p>
-            <div id='last-update' style='margin-top: 10px; color: #a8a8a8; font-size: 0.9em;'></div>
+        <div class=""footer"">
+            <button class=""refresh-btn"" onclick=""refreshData()"">🔄 Actualiser</button>
+            <p>MarsBridge Server v1.0.0 | <a href=""/swagger"" style=""color: #4ecdc4;"">API Docs</a> | <a href=""/metrics"" style=""color: #4ecdc4;"">Prometheus</a></p>
+            <div id=""last-update"" style=""margin-top: 10px; color: #a8a8a8; font-size: 0.9em;""></div>
         </div>
     </div>
 
@@ -422,7 +422,7 @@ public class MonitoringController : ControllerBase
             const data = await fetchMonitoringData();
             if (!data) {
                 document.querySelectorAll('.loading').forEach(el => {
-                    el.innerHTML = '<div class="error">❌ Erreur de connexion au serveur</div>';
+                    el.innerHTML = '<div class=""error"">❌ Erreur de connexion au serveur</div>';
                 });
                 document.getElementById('status-indicator').style.background = '#ff6b6b';
                 return;
@@ -436,7 +436,7 @@ public class MonitoringController : ControllerBase
             updateAtmosphereComposition(data);
 
             lastUpdate = Date.now();
-            document.getElementById('last-update').textContent = `Dernière mise à jour: ${new Date().toLocaleString()}`;
+            document.getElementById('last-update').textContent = 'Dernière mise à jour: ' + new Date().toLocaleString();
         }
 
         function refreshData() {
